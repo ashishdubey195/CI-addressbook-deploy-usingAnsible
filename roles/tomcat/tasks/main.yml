@@ -27,7 +27,11 @@
     dest: /opt/apache-tomcat-7.0.61.tar.gz
 
 - name: Extract archive
-  command: chdir=/usr/share/bin/tar xvf /opt/apache-tomcat-7.0.61.tar.gz -C /opt/ creates=/opt/apache-tomcat-7.0.61
+  shell: tar xvf /opt/apache-tomcat-7.0.61.tar.gz -C /opt/
+  args:
+    chdir: /usr/share/bin
+    creates: /opt/apache-tomcat-7.0.61
+
 
 - name: Symlink install directory
   file:

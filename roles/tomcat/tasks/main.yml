@@ -47,5 +47,4 @@
 - name: Start Tomcat
   shell: nohup /usr/share/tomcat/bin/startup.sh
 
-- name: wait for tomcat to start
-  wait_for: port={{http_port}}
+

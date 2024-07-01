@@ -1,82 +1,86 @@
 ---
-- name: Update package cache
-  apt:
-    update_cache: true
+- name: Setup Tomcat Server
+  hosts: all
+  become: yes
 
-- name: Install Java 1.8
-  apt:
-    name: openjdk-8-jdk
-    state: present
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: true
 
-- name: create group tomcat
-  group:
-    name: tomcat
+    - name: Install Java 1.8
+      apt:
+        name: openjdk-8-jdk
+        state: present
 
-- name: add user "tomcat"
-  user:
-    name: tomcat
-    group: tomcat
-    home: /usr/share/tomcat
-    createhome: no
-  become: true
-  become_method: sudo
+    - name: create group tomcat
+      group:
+        name: tomcat
 
-- name: Download and extract Tomcat
-  unarchive:
-    src: http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.61/bin/apache-tomcat-7.0.61.tar.gz
-    dest: /opt/
-    remote_src: yes
-    creates: /opt/apache-tomcat-7.0.61
+    - name: add user "tomcat"
+      user:
+        name: tomcat
+        group: tomcat
+        home: /usr/share/tomcat
+        createhome: no
 
+    - name: Download and extract Tomcat
+      unarchive:
+        src: http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.61/bin/apache-tomcat-7.0.61.tar.gz
+        dest: /opt/
+        remote_src: yes
+        creates: /opt/apache-tomcat-7.0.61
 
-- name: Extract archive
-  shell: tar xvf /opt/apache-tomcat-7.0.61.tar.gz -C /opt/
-  args:
-    chdir: /usr/share/bin
-    creates: /opt/apache-tomcat-7.0.61
+    - name: Symlink install directory
+      file:
+        src: /opt/apache-tomcat-7.0.61
+        path: /usr/share/tomcat
+        state: link
 
+    - name: Change ownership of Tomcat installation
+      file:
+        path: /usr/share/tomcat/
+        owner: tomcat
+        group: tomcat
+        state: directory
+        recurse: yes
 
-- name: Symlink install directory
-  file:
-    src: /opt/apache-tomcat-7.0.61
-    path: /usr/share/tomcat
-    state: link
+    - name: Configure Tomcat server
+      template:
+        src: server.xml
+        dest: /usr/share/tomcat/conf/
 
-- name: Change ownership of Tomcat installation
-  file:
-    path: /usr/share/tomcat/
-    owner: tomcat
-    group: tomcat
-    state: directory
-    recurse: yes
+    - name: Create sample directory
+      file:
+        path: "/opt/apache-tomcat-7.0.61/webapps/samples"
+        state: directory
+        mode: "0777"
 
-- name: Configure Tomcat server
-  template:
-    src: server.xml
-    dest: /usr/share/tomcat/conf/
+    - name: copy war file
+      copy:
+        src: ./addressbook_main/target/addressbook.war
+        dest: /opt/apache-tomcat-7.0.61/webapps/
+      notify: restart tomcat
 
-- name: Create sample directory
-  file:
-    path: "/opt/apache-tomcat-7.0.61/webapps/samples"
-    state: directory
-    mode: "0777"
-  become: true
+    - name: Install Tomcat init script
+      copy:
+        src: tomcat-initscript.sh
+        dest: /etc/init.d/tomcat
+        mode: "0755"
+      notify: restart tomcat
 
-- name: copy war file
-  copy:
-    src: ./addressbook_main/target/addressbook.war
-    dest: /opt/apache-tomcat-7.0.61/webapps/
-  notify: restart tomcat
+    - name: Ensure Tomcat is started
+      service:
+        name: tomcat
+        state: started
 
-- name: Install Tomcat init script
-  copy:
-    src: tomcat-initscript.sh
-    dest: /etc/init.d/tomcat
-    mode: "0755"
+  handlers:
+    - name: restart tomcat
+      service:
+        name: tomcat
+        state: restarted
 
-- name: Start Tomcat
-  shell: sh /usr/share/tomcat/bin/startup.sh
-
-#- name: Wait for Tomcat to start
- # wait_for:
- #   port: "{{ http_port }}"
+    - name: start tomcat
+      service:
+        name: tomcat
+        state: started

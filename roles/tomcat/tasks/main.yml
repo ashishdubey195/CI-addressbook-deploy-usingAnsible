@@ -8,14 +8,14 @@
     name: openjdk-8-jdk
     state: present
 
-- name: add group "tomcat"
+- name: create group tomcat
   group:
-    name: "{{ tomcat_group }}"
+    name: tomcat
 
 - name: add user "tomcat"
   user:
-    name: "{{ tomcat_user }}"
-    group: "{{ tomcat_group }}"
+    name: tomcat
+    group: tomcat
     home: /usr/share/tomcat
     createhome: no
   become: true

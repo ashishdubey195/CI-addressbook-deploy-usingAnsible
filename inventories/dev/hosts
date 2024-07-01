@@ -1,5 +1,6 @@
+[webserver]
 
-
+4.213.169.82  ansible_ssh_user=ANSIBLENODE2
 
 
 [appserver]

@@ -68,7 +68,7 @@
     mode: "0755"
 
 - name: Start Tomcat
-  shell: nohup /usr/share/tomcat/bin/startup.sh
+  shell: sh /usr/share/tomcat/bin/startup.sh
 
 #- name: Wait for Tomcat to start
  # wait_for:

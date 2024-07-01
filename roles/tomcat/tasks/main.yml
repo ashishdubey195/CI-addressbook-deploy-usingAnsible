@@ -45,6 +45,6 @@
   copy: src=tomcat-initscript.sh dest=/etc/init.d/tomcat mode=0755
 
 - name: Start Tomcat
-  shell: nohup /usr/share/tomcat/bin/startup.sh
+  shell: /usr/share/tomcat/bin/startup.sh
 
 
